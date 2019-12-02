@@ -41,6 +41,7 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory, expected)
+        self.assertEqual(program.pc, 4)
 
     @parameterized.expand([
         ([2, 1, 2, 4, 0], [2, 1, 2, 4, 2]),
@@ -55,3 +56,4 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory, expected)
+        self.assertEqual(program.pc, 4)

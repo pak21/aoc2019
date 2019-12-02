@@ -22,3 +22,5 @@ class Program():
 
         result = value1 + value2 if opcode == 1 else value1 * value2
         self._memory[dest] = result
+
+        self._pc += 4
