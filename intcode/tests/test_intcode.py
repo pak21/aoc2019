@@ -37,11 +37,12 @@ class Test_Program(unittest.TestCase):
         program = intcode.Program(initial_memory)
 
         # Act
-        program.single_step()
+        terminated = program.single_step()
 
         # Assert
         self.assertEqual(program.memory, expected)
         self.assertEqual(program.pc, 4)
+        self.assertFalse(terminated)
 
     @parameterized.expand([
         ([2, 1, 2, 4, 0], [2, 1, 2, 4, 2]),
@@ -52,8 +53,19 @@ class Test_Program(unittest.TestCase):
         program = intcode.Program(initial_memory)
 
         # Act
-        program.single_step()
+        terminated = program.single_step()
 
         # Assert
         self.assertEqual(program.memory, expected)
         self.assertEqual(program.pc, 4)
+        self.assertFalse(terminated)
+
+    def test_terminate_instruction(self):
+        # Arrange
+        program = intcode.Program([99])
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertTrue(terminated)

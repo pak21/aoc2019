@@ -13,6 +13,9 @@ class Program():
 
     def single_step(self):
         opcode = self.memory[self._pc]
+        if opcode == 99:
+            return True
+
         arg1 = self.memory[self._pc + 1]
         arg2 = self.memory[self._pc + 2]
         dest = self.memory[self._pc + 3]
@@ -24,3 +27,4 @@ class Program():
         self._memory[dest] = result
 
         self._pc += 4
+        return False
