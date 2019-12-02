@@ -1,7 +1,8 @@
 class Program():
     OPCODES = {
-        1: lambda a, b: a + b,
-        2: lambda a, b: a * b,
+        1: lambda s: s._threearg_opcode(lambda a, b: a + b),
+        2: lambda s: s._threearg_opcode(lambda a, b: a * b),
+        99: lambda s: True
     }
 
     def __init__(self, initial_memory):
@@ -16,28 +17,27 @@ class Program():
     def memory(self):
         return self._memory
 
+    def _threearg_opcode(self, resultfn):
+        arg1 = self._memory[self._pc + 1]
+        arg2 = self._memory[self._pc + 2]
+        dest = self._memory[self._pc + 3]
+
+        value1 = self._memory[arg1]
+        value2 = self._memory[arg2]
+
+        self._memory[dest] = resultfn(value1, value2)
+        self._pc += 4
+        return False
+
     def single_step(self):
-        opcode = self.memory[self._pc]
-        if opcode == 99:
-            return True
+        opcode = self._memory[self._pc]
 
         try:
             opcodefn = self.OPCODES[opcode]
         except KeyError:
             raise UnknownOpcodeException(opcode)
 
-        arg1 = self.memory[self._pc + 1]
-        arg2 = self.memory[self._pc + 2]
-        dest = self.memory[self._pc + 3]
-
-        value1 = self.memory[arg1]
-        value2 = self.memory[arg2]
-
-        result = opcodefn(value1, value2)
-        self._memory[dest] = result
-
-        self._pc += 4
-        return False
+        return opcodefn(self)
 
     def run(self):
         terminated = False
