@@ -70,6 +70,14 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertTrue(terminated)
 
+    def test_unknown_opcode_throws_correct_exception(self):
+        # Arrange
+        program = intcode.Program([255])
+
+        # Act / Assert
+        with self.assertRaises(intcode.UnknownOpcodeException):
+            program.single_step()
+
     @parameterized.expand([
         ([1, 0, 0, 3, 99], [1, 0, 0, 2, 99]),
         ([1, 0, 0, 3, 1, 1, 1, 3, 99], [1, 0, 0, 0, 1, 1, 1, 3, 99]),
