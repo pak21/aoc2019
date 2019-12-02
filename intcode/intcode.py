@@ -28,3 +28,8 @@ class Program():
 
         self._pc += 4
         return False
+
+    def run(self):
+        terminated = False
+        while not terminated:
+            terminated = self.single_step()

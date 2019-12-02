@@ -69,3 +69,17 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertTrue(terminated)
+
+    @parameterized.expand([
+        ([1, 0, 0, 3, 99], [1, 0, 0, 2, 99]),
+        ([1, 0, 0, 3, 1, 1, 1, 3, 99], [1, 0, 0, 0, 1, 1, 1, 3, 99]),
+    ])
+    def test_run(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.memory, expected)
