@@ -12,6 +12,7 @@ class Program():
         return self._memory
 
     def single_step(self):
+        opcode = self.memory[self._pc]
         arg1 = self.memory[self._pc + 1]
         arg2 = self.memory[self._pc + 2]
         dest = self.memory[self._pc + 3]
@@ -19,4 +20,5 @@ class Program():
         value1 = self.memory[arg1]
         value2 = self.memory[arg2]
 
-        self._memory[dest] = value1 + value2
+        result = value1 + value2 if opcode == 1 else value1 * value2
+        self._memory[dest] = result

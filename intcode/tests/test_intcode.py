@@ -41,3 +41,17 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory, expected)
+
+    @parameterized.expand([
+        ([2, 1, 2, 4, 0], [2, 1, 2, 4, 2]),
+        ([2, 4, 5, 6, 7, 8, 0], [2, 4, 5, 6, 7, 8, 56]),
+    ])
+    def test_single_multiply_instruction(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.memory, expected)
