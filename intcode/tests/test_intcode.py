@@ -1,5 +1,7 @@
 import unittest
 
+from parameterized import parameterized
+
 import intcode
 
 class Test_Program(unittest.TestCase):
@@ -25,3 +27,17 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(initial_memory[memory_offset], initial_value)
+
+    @parameterized.expand([
+        ([1, 1, 2, 4, 0], [1, 1, 2, 4, 3]),
+        ([1, 4, 5, 6, 7, 8, 0], [1, 4, 5, 6, 7, 8, 15]),
+    ])
+    def test_single_add_instruction(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.memory, expected)
