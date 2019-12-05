@@ -41,6 +41,8 @@ class Test_Program(unittest.TestCase):
     @parameterized.expand([
         ([1, 1, 2, 4, 0], [1, 1, 2, 4, 3]),
         ([1, 4, 5, 6, 7, 8, 0], [1, 4, 5, 6, 7, 8, 15]),
+        ([101, 3, 3, 4, 0], [101, 3, 3, 4, 7]),
+        ([1001, 0, 2, 4, 0], [1001, 0, 2, 4, 1003]),
     ])
     def test_single_add_instruction(self, initial_memory, expected):
         # Arrange
@@ -57,6 +59,8 @@ class Test_Program(unittest.TestCase):
     @parameterized.expand([
         ([2, 1, 2, 4, 0], [2, 1, 2, 4, 2]),
         ([2, 4, 5, 6, 7, 8, 0], [2, 4, 5, 6, 7, 8, 56]),
+        ([102, 3, 1, 3], [102, 3, 1, 9]),
+        ([1002, 2, 4, 3], [1002, 2, 4, 16]),
     ])
     def test_single_multiply_instruction(self, initial_memory, expected):
         # Arrange
@@ -83,17 +87,21 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.pc, 2)
         self.assertFalse(terminated)
 
-    def test_single_output_instruction(self):
+    @parameterized.expand([
+        ([4, 2, 42], 42),
+        ([104, 2, 42], 2),
+    ])
+    def test_single_output_instruction(self, initial_memory, expected_output):
         # Arrange
         expected = 42
-        program = intcode.Program([4, 2, expected])
+        program = intcode.Program(initial_memory)
 
         # Act
         terminated = program.single_step()
 
         # Assert
         self.assertEqual(program.pc, 2)
-        self.assertEqual(program.outputs, [expected])
+        self.assertEqual(program.outputs, [expected_output])
         self.assertFalse(terminated)
 
     def test_terminate_instruction(self):
