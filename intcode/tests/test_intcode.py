@@ -136,6 +136,42 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.pc, expected_pc)
         self.assertFalse(terminated)
 
+    @parameterized.expand([
+        ([7, 6, 5, 4, 42, 1, -1], 1),
+        ([7, 6, 5, 4, 42, 1, 1], 0),
+        ([7, 6, 5, 4, 42, -1, 1], 0),
+        ([107, 6, 5, 4, 42, 1, -1], 0),
+        ([1007, 6, 5, 4, 42, 1, 4], 1),
+    ])
+    def test_single_less_than_instruction(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.memory[4], expected)
+        self.assertFalse(terminated)
+
+    @parameterized.expand([
+        ([8, 6, 5, 4, 42, 1, 1], 1),
+        ([8, 6, 5, 4, 42, -1, 1], 0),
+        ([8, 6, 5, 4, 42, 1, -1], 0),
+        ([108, 6, 5, 4, 42, 1, 1], 0),
+        ([1008, 6, 5, 4, 42, 1, 5], 1),
+    ])
+    def test_single_equals_instruction(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.memory[4], expected)
+        self.assertFalse(terminated)
+
     def test_terminate_instruction(self):
         # Arrange
         program = intcode.Program([99])
