@@ -60,6 +60,19 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.pc, 4)
         self.assertFalse(terminated)
 
+    def test_single_input_instruction(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([3, 2, 0], expected)
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.memory[2], expected)
+        self.assertEqual(program.pc, 2)
+        self.assertFalse(terminated)
+
     def test_terminate_instruction(self):
         # Arrange
         program = intcode.Program([99])
