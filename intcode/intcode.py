@@ -1,4 +1,8 @@
 class Program():
+    OPCODES2 = {
+        4: (1, lambda s, p: s._output(p)),
+    }
+
     OPCODES = {
         1: lambda s, m: s._threearg_opcode(m, lambda a, b: a + b),
         2: lambda s, m: s._threearg_opcode(m, lambda a, b: a * b),
@@ -50,11 +54,8 @@ class Program():
         self._pc += 2
         return False
 
-    def _output(self, modes):
-        parameters = self._get_parameters(modes, 1)[0]
-
-        self._outputs.append(parameters)
-        self._pc += 2
+    def _output(self, parameters):
+        self._outputs.append(parameters[0])
         return False
 
     def _jump(self, modes, testfn):
@@ -70,12 +71,18 @@ class Program():
         p3mode = (value // 10000) % 10
         modes = [p1mode, p2mode, p3mode]
 
-        try:
-            opcodefn = self.OPCODES[opcode]
-        except KeyError:
-            raise UnknownOpcodeException(opcode)
+        if opcode in self.OPCODES2:
+            param_count, opcodefn = self.OPCODES2[opcode]
+            params = self._get_parameters(modes, param_count)
+            self._pc += 1 + param_count
+            return opcodefn(self, params)
+        else:
+            try:
+                opcodefn = self.OPCODES[opcode]
+            except KeyError:
+                raise UnknownOpcodeException(opcode)
 
-        return opcodefn(self, modes)
+            return opcodefn(self, modes)
 
     def run(self):
         terminated = False
