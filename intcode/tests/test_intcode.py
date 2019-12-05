@@ -104,6 +104,22 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.outputs, [expected_output])
         self.assertFalse(terminated)
 
+    @parameterized.expand([
+        ([5, 0, 4, 0, 42], 42),
+        ([105, 0, 4, 0, 42], 3),
+        ([1005, 0, 4, 0, 42], 4),
+    ])
+    def test_single_jump_if_true_instruction(self, initial_memory, expected_pc):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.pc, expected_pc)
+        self.assertFalse(terminated)
+
     def test_terminate_instruction(self):
         # Arrange
         program = intcode.Program([99])
