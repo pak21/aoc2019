@@ -29,15 +29,16 @@ class Program():
     def outputs(self):
         return self._outputs
 
+    def _get_parameters(self, modes, count):
+        args = self._memory[self._pc + 1:self._pc + 1 + count]
+        parameters = [args[i] if modes[i] else self._memory[args[i]] for i in range(count)]
+        return parameters
+
     def _threearg_opcode(self, modes, resultfn):
-        arg1 = self._memory[self._pc + 1]
-        arg2 = self._memory[self._pc + 2]
+        parameters = self._get_parameters(modes, 2)
         dest = self._memory[self._pc + 3]
 
-        value1 = self._memory[arg1] if modes[0] == 0 else arg1
-        value2 = self._memory[arg2] if modes[1] == 0 else arg2
-
-        result = resultfn(value1, value2)
+        result = resultfn(parameters[0], parameters[1])
 
         self._memory[dest] = result
         self._pc += 4
