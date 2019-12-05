@@ -1,18 +1,14 @@
 class Program():
-    OPCODES2 = {
-        4: (1, lambda s, p: s._output(p)),
-    }
-
     OPCODES = {
-        1: lambda s, m: s._threearg_opcode(m, lambda a, b: a + b),
-        2: lambda s, m: s._threearg_opcode(m, lambda a, b: a * b),
-        3: lambda s, m: s._input(),
-        4: lambda s, m: s._output(m),
-        5: lambda s, m: s._jump(m, lambda a: a != 0),
-        6: lambda s, m: s._jump(m, lambda a: a == 0),
-        7: lambda s, m: s._threearg_opcode(m, lambda a, b: 1 if a < b else 0),
-        8: lambda s, m: s._threearg_opcode(m, lambda a, b: 1 if a == b else 0),
-        99: lambda s, m: True
+        1: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: a + b)),
+        2: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: a * b)),
+        3: (1, lambda s, p: s._input()),
+        4: (1, lambda s, p: s._output(p)),
+        5: (2, lambda s, p: s._jump(p, lambda a: a != 0)),
+        6: (2, lambda s, p: s._jump(p, lambda a: a == 0)),
+        7: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a < b else 0)),
+        8: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a == b else 0)),
+        99: (0, lambda s, p: True)
     }
 
     def __init__(self, initial_memory, input_value = 0):
@@ -38,29 +34,24 @@ class Program():
         parameters = [args[i] if modes[i] else self._memory[args[i]] for i in range(count)]
         return parameters
 
-    def _threearg_opcode(self, modes, resultfn):
-        parameters = self._get_parameters(modes, 2)
-        dest = self._memory[self._pc + 3]
-
+    def _threearg_opcode(self, parameters, resultfn):
         result = resultfn(parameters[0], parameters[1])
-
+        dest = self._memory[self._pc - 1] # PC has already been incremented
         self._memory[dest] = result
-        self._pc += 4
         return False
 
     def _input(self):
-        arg1 = self._memory[self._pc + 1]
-        self._memory[arg1] = self._input_value
-        self._pc += 2
+        dest = self._memory[self._pc - 1] # PC has already been incremented
+        self._memory[dest] = self._input_value
         return False
 
     def _output(self, parameters):
         self._outputs.append(parameters[0])
         return False
 
-    def _jump(self, modes, testfn):
-        parameters = self._get_parameters(modes, 2)
-        self._pc = parameters[1] if testfn(parameters[0]) else self._pc + 3
+    def _jump(self, parameters, testfn):
+        if testfn(parameters[0]):
+            self._pc = parameters[1]
         return False
 
     def single_step(self):
@@ -71,18 +62,14 @@ class Program():
         p3mode = (value // 10000) % 10
         modes = [p1mode, p2mode, p3mode]
 
-        if opcode in self.OPCODES2:
-            param_count, opcodefn = self.OPCODES2[opcode]
-            params = self._get_parameters(modes, param_count)
-            self._pc += 1 + param_count
-            return opcodefn(self, params)
-        else:
-            try:
-                opcodefn = self.OPCODES[opcode]
-            except KeyError:
-                raise UnknownOpcodeException(opcode)
+        try:
+            param_count, opcodefn = self.OPCODES[opcode]
+        except KeyError:
+            raise UnknownOpcodeException(opcode)
 
-            return opcodefn(self, modes)
+        params = self._get_parameters(modes, param_count)
+        self._pc += 1 + param_count
+        return opcodefn(self, params)
 
     def run(self):
         terminated = False
