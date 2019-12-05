@@ -2,8 +2,8 @@ class Program():
     OPCODES = {
         1: lambda s, m: s._threearg_opcode(m, lambda a, b: a + b),
         2: lambda s, m: s._threearg_opcode(m, lambda a, b: a * b),
-        3: lambda s, m: s._input(m[0]),
-        4: lambda s, m: s._output(m[0]),
+        3: lambda s, m: s._input(),
+        4: lambda s, m: s._output(m),
         5: lambda s, m: s._jump(m, lambda a: a != 0),
         6: lambda s, m: s._jump(m, lambda a: a == 0),
         7: lambda s, m: s._threearg_opcode(m, lambda a, b: 1 if a < b else 0),
@@ -44,30 +44,23 @@ class Program():
         self._pc += 4
         return False
 
-    def _input(self, mode):
+    def _input(self):
         arg1 = self._memory[self._pc + 1]
         self._memory[arg1] = self._input_value
         self._pc += 2
         return False
 
-    def _output(self, mode):
-        arg1 = self._memory[self._pc + 1]
-        value1 = self._memory[arg1] if mode == 0 else arg1
-        self._outputs.append(value1)
+    def _output(self, modes):
+        parameters = self._get_parameters(modes, 1)[0]
+
+        self._outputs.append(parameters)
         self._pc += 2
         return False
 
     def _jump(self, modes, testfn):
-        arg1 = self._memory[self._pc + 1]
-        arg2 = self._memory[self._pc + 2]
-
-        value1 = self._memory[arg1] if modes[0] == 0 else arg1
-        value2 = self._memory[arg2] if modes[1] == 0 else arg2
-
-        if testfn(value1):
-            self._pc = value2
-        else:
-            self._pc += 3
+        parameters = self._get_parameters(modes, 2)
+        self._pc = parameters[1] if testfn(parameters[0]) else self._pc + 3
+        return False
 
     def single_step(self):
         value = self._memory[self._pc]
