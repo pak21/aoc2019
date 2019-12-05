@@ -15,3 +15,5 @@ input_value = int(sys.argv[2])
 
 program = intcode.Program(memory, input_value)
 program.run()
+
+print(program.outputs)

@@ -28,6 +28,16 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(initial_memory[memory_offset], initial_value)
 
+    def test_outputs_starts_empty(self):
+        # Arrange
+        program = intcode.Program([])
+
+        # Act
+        outputs = program.outputs
+
+        # Assert
+        self.assertFalse(outputs) # Expect an empty list
+
     @parameterized.expand([
         ([1, 1, 2, 4, 0], [1, 1, 2, 4, 3]),
         ([1, 4, 5, 6, 7, 8, 0], [1, 4, 5, 6, 7, 8, 15]),
@@ -71,6 +81,19 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(program.memory[2], expected)
         self.assertEqual(program.pc, 2)
+        self.assertFalse(terminated)
+
+    def test_single_output_instruction(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([4, 2, expected])
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.pc, 2)
+        self.assertEqual(program.outputs, [expected])
         self.assertFalse(terminated)
 
     def test_terminate_instruction(self):

@@ -13,6 +13,7 @@ class Program():
 
     def __init__(self, initial_memory, input_value = 0):
         self._pc = 0
+        self._outputs = []
         self._memory = initial_memory.copy()
         self._input_value = input_value
 
@@ -23,6 +24,10 @@ class Program():
     @property
     def memory(self):
         return self._memory
+
+    @property
+    def outputs(self):
+        return self._outputs
 
     def _threearg_opcode(self, modes, resultfn):
         arg1 = self._memory[self._pc + 1]
@@ -47,7 +52,7 @@ class Program():
     def _output(self, mode):
         arg1 = self._memory[self._pc + 1]
         value1 = self._memory[arg1] if mode == 0 else arg1
-        print(value1)
+        self._outputs.append(value1)
         self._pc += 2
         return False
 
