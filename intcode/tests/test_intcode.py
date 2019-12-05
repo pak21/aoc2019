@@ -1,5 +1,6 @@
 import unittest
 
+import itertools
 from parameterized import parameterized
 
 import intcode
@@ -223,3 +224,90 @@ class Test_Program_Day2(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory, expected)
+
+class Test_Program_Day5(unittest.TestCase):
+    """Integration tests from Advent of Code Day 5"""
+
+    @parameterized.expand([
+        ([3, 0, 4, 0, 99], [42]),
+        ([1002, 4, 3, 4, 33], []),
+        ([1101, 100, -1, 4, 0], []),
+    ])
+    def test_examples(self, initial_memory, expected_outputs):
+        # Arrange
+        program = intcode.Program(initial_memory, 42)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, expected_outputs)
+
+    @parameterized.expand(
+        itertools.product(
+            [[3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8], [3, 3, 1108, -1, 8, 3, 4, 3, 99]], # Programs
+            [7, 8, 9], # Input values
+        )
+    )
+    def test_equals_8(self, initial_memory, input_value):
+        # Arrange
+        program = intcode.Program(initial_memory, input_value)
+        expected = 1 if input_value == 8 else 0
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
+
+    @parameterized.expand(
+        itertools.product(
+            [[3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8], [3, 3, 1107, -1, 8, 3, 4, 3, 99]], # Programs
+            [7, 8, 9], # Input values
+        )
+    )
+    def test_less_than_8(self, initial_memory, input_value):
+        # Arrange
+        program = intcode.Program(initial_memory, input_value)
+        expected = 1 if input_value < 8 else 0
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
+
+    @parameterized.expand(
+        itertools.product(
+            [[3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9], [3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1]], #Programs
+            [-1, 0, 1], # Input values
+        )
+    )
+    def test_jumps(self, initial_memory, input_value):
+        # Arrange
+        program = intcode.Program(initial_memory, input_value)
+        expected = 1 if input_value != 0 else 0
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
+
+    @parameterized.expand([
+        (7, 999),
+        (8, 1000),
+        (9, 1001),
+    ])
+    def test_final_example(self, input_value, expected):
+        # Arrange
+        program = intcode.Program(
+            [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99],
+            input_value
+        )
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
