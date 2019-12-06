@@ -9,16 +9,12 @@ def path_to_root(start, parents):
         path = [parents[path[0]]] + path
     return path
 
-links = collections.defaultdict(list)
 parents = {}
-seen = set()
 
 with open(sys.argv[1]) as f:
     for line in [l.strip() for l in f]:
         first, second = line.split(')')
-        links[first].append(second)
         parents[second] = first
-        seen.add(second)
 
 you = path_to_root('YOU', parents)
 santa = path_to_root('SAN', parents)
