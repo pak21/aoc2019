@@ -11,14 +11,16 @@ class Program():
         99: (0, lambda s, p: True)
     }
 
-    def __init__(self, initial_memory, input_value = None, *, input_values = None):
+    def __init__(self, initial_memory, input_value = None, *, input_values = None, input_generator = None):
         self._pc = 0
         self._outputs = []
         self._memory = initial_memory.copy()
-        if input_values is not None:
-            self._input_values = input_values
+        if input_generator is not None:
+            self._input_iterator = input_generator()
+        elif input_values is not None:
+            self._input_iterator = iter(input_values)
         elif input_value is not None:
-            self._input_values = [input_value]
+            self._input_iterator = iter([input_value])
 
     @property
     def pc(self):
@@ -45,7 +47,7 @@ class Program():
 
     def _input(self):
         dest = self._memory[self._pc - 1] # PC has already been incremented
-        self._memory[dest] = self._input_values.pop(0)
+        self._memory[dest] = next(self._input_iterator)
         return False
 
     def _output(self, parameters):

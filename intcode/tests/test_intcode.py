@@ -5,6 +5,11 @@ from parameterized import parameterized
 
 import intcode
 
+def _generator():
+    """Helper function for `test_input_generator`"""
+    yield 100
+    yield 101
+
 class Test_Program(unittest.TestCase):
     def test_pc_is_initially_zero(self):
         # Arrange
@@ -102,6 +107,19 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.pc, 4)
         self.assertEqual(program.memory[4], expected1)
         self.assertEqual(program.memory[5], expected2)
+
+    def test_input_generator(self):
+        # Arrange
+        program = intcode.Program([3, 4, 3, 5, 0, 0], input_generator = _generator)
+
+        # Act
+        program.single_step()
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.pc, 4)
+        self.assertEqual(program.memory[4], 100)
+        self.assertEqual(program.memory[5], 101)
 
     @parameterized.expand([
         ([4, 2, 42], 42),
