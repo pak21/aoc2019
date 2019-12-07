@@ -11,11 +11,14 @@ class Program():
         99: (0, lambda s, p: True)
     }
 
-    def __init__(self, initial_memory, input_value = 0):
+    def __init__(self, initial_memory, input_value = None, *, input_values = None):
         self._pc = 0
         self._outputs = []
         self._memory = initial_memory.copy()
-        self._input_value = input_value
+        if input_values is not None:
+            self._input_values = input_values
+        elif input_value is not None:
+            self._input_values = [input_value]
 
     @property
     def pc(self):
@@ -42,7 +45,7 @@ class Program():
 
     def _input(self):
         dest = self._memory[self._pc - 1] # PC has already been incremented
-        self._memory[dest] = self._input_value
+        self._memory[dest] = self._input_values.pop(0)
         return False
 
     def _output(self, parameters):
