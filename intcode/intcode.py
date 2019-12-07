@@ -79,6 +79,12 @@ class Program():
         while not terminated:
             terminated = self.single_step()
 
+    def run_to_output(self):
+        terminated = False
+        outputs_length = len(self._outputs)
+        while not terminated and len(self._outputs) == outputs_length:
+            terminated = self.single_step()
+
 class UnknownOpcodeException(Exception):
     def __init__(self, opcode):
         self._opcode = opcode
