@@ -88,6 +88,21 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.pc, 2)
         self.assertFalse(terminated)
 
+    def test_multiple_input_values(self):
+        # Arrange
+        expected1 = 42
+        expected2 = 43
+        program = intcode.Program([3, 4, 3, 5, 0, 0], input_values = [expected1, expected2])
+
+        # Act
+        program.single_step()
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.pc, 4)
+        self.assertEqual(program.memory[4], expected1)
+        self.assertEqual(program.memory[5], expected2)
+
     @parameterized.expand([
         ([4, 2, 42], 42),
         ([104, 2, 42], 2),
@@ -204,6 +219,20 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory, expected)
+
+    def test_run_to_output(self):
+        # Arrange
+        program = intcode.Program([
+            1101, 12, 34, 5, 104, 0, # Should be executed
+            98 # Invalid opcode, should not be executed
+        ])
+
+        # Act
+        program.run_to_output()
+
+        # Assert
+        self.assertEqual(program.outputs, [46])
+        self.assertEqual(program.pc, 6)
 
 class Test_Program_Day2(unittest.TestCase):
     """Integration tests from Advent of Code Day 2"""
