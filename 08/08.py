@@ -10,7 +10,7 @@ height = int(sys.argv[3])
 with open(sys.argv[1]) as f:
     digits = [int(x) for x in f.readline().strip()]
 
-image = np.reshape(digits, (-1, height, width))
+image = np.reshape(np.array(digits, dtype=np.uint8), (-1, height, width))
 
 # Part 1
 
@@ -20,8 +20,5 @@ print(counts[1][minzeros] * counts[2][minzeros])
 
 # Part 2
 
-def firstmatching(image, x, y):
-    return image[np.argmax(image[:,y,x] != 2),y,x]
-
-for y in range(image.shape[1]):
-    print(''.join([('#' if firstmatching(image, x, y) else ' ') for x in range(image.shape[2])]))
+pixel_values = np.apply_along_axis(lambda a: a[np.argmax(a != 2)], 0, image)
+print('\n'.join([''.join(['#' if pixel else ' ' for pixel in row]) for row in pixel_values]))
