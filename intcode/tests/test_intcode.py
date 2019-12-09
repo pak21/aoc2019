@@ -286,6 +286,21 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.outputs, [46])
         self.assertEqual(program.pc, 6)
 
+    @parameterized.expand([
+        ([109, 9, 1201, -2, 10, 8, 99, 5, 999], 15),
+        ([109, 11, 2102, 5, -4, 8, 99, 7, 999], 35),
+        ([109, 4, 21102, 11, 13, 4, 99, 999, 999], 143),
+    ])
+    def test_relative_addressing_mode(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.memory[8], expected)
+
 class Test_Program_Day2(unittest.TestCase):
     """Integration tests from Advent of Code Day 2"""
 
