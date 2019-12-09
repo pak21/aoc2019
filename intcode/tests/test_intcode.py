@@ -21,6 +21,16 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(pc, 0)
 
+    def test_relative_base_is_initially_zero(self):
+        # Arrange
+        program = intcode.Program([])
+
+        # Act
+        relative_base = program.relative_base
+
+        # Assert
+        self.assertEqual(relative_base, 0)
+
     def test_memory_is_copied(self):
         # Arrange
         initial_value = 42
@@ -138,6 +148,18 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.outputs, [expected_output])
         self.assertFalse(terminated)
 
+    def test_output_with_relative_base(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([109, 5, 204, -1, expected, 0])
+        program.single_step() # Set relative base
+
+        # Act
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
+
     @parameterized.expand([
         ([5, 0, 4, 0, 42], 42),
         ([105, 0, 4, 0, 42], 3),
@@ -204,6 +226,18 @@ class Test_Program(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.memory[4], expected)
+        self.assertFalse(terminated)
+
+    def test_single_adjust_relative_base_instruction(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([109, expected])
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.relative_base, expected)
         self.assertFalse(terminated)
 
     def test_terminate_instruction(self):

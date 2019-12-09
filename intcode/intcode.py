@@ -8,11 +8,13 @@ class Program():
         6: (2, lambda s, p: s._jump(p, lambda a: a == 0)),
         7: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a < b else 0)),
         8: (3, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a == b else 0)),
+        9: (1, lambda s, p: s._adjust_relative_base(p)),
         99: (0, lambda s, p: True)
     }
 
     def __init__(self, initial_memory, input_value = None, *, input_values = None, input_generator = None):
         self._pc = 0
+        self._relative_base = 0
         self._outputs = []
         self._memory = initial_memory.copy()
         if input_generator is not None:
@@ -27,6 +29,10 @@ class Program():
         return self._pc
 
     @property
+    def relative_base(self):
+        return self._relative_base
+
+    @property
     def memory(self):
         return self._memory
 
@@ -34,9 +40,24 @@ class Program():
     def outputs(self):
         return self._outputs
 
+    def _get_parameter(self, mode, argument):
+        if mode == 0:
+            # Position mode
+            parameter = self._memory[argument]
+        elif mode == 1:
+            # Immediate mode
+            parameter = argument
+        elif mode == 2:
+            # Relative mode
+            parameter = self._memory[self._relative_base + argument]
+        else:
+            raise ValueError('Unknown addressing mode {}'.format(mode))
+
+        return parameter
+
     def _get_parameters(self, modes, count):
         args = self._memory[self._pc + 1:self._pc + 1 + count]
-        parameters = [args[i] if modes[i] else self._memory[args[i]] for i in range(count)]
+        parameters = [self._get_parameter(modes[i], args[i]) for i in range(count)]
         return parameters
 
     def _threearg_opcode(self, parameters, resultfn):
@@ -57,6 +78,10 @@ class Program():
     def _jump(self, parameters, testfn):
         if testfn(parameters[0]):
             self._pc = parameters[1]
+        return False
+
+    def _adjust_relative_base(self, parameters):
+        self._relative_base += parameters[0]
         return False
 
     def single_step(self):
