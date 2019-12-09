@@ -49,35 +49,23 @@ class Program():
     def outputs(self):
         return self._outputs
 
-    def _get_input_parameter(self, mode, argument):
-        if mode == 0:
-            # Position mode
-            parameter = self._memory[argument]
-        elif mode == 1:
-            # Immediate mode
-            parameter = argument
-        elif mode == 2:
-            # Relative mode
-            parameter = self._memory[self._relative_base + argument]
-        else:
-            raise InvalidAddressingModeException(mode, False)
+    def _get_parameter(self, mode, argument, is_output_parameter):
+        if mode < 0 or mode > 2:
+            raise InvalidAddressingModeException(mode, is_output_parameter)
 
-        return parameter
+        # Output parameters cannot be in immediate mode
+        if is_output_parameter and mode == 1:
+            raise InvalidAddressingModeException(mode, is_output_parameter)
 
-    def _get_output_parameter(self, mode, argument):
-        if mode == 0:
-            # Position mode
-            parameter = argument
-        elif mode == 1:
-            # Output parameters cannot be in immediate mode
-            raise InvalidAddressingModeException(mode, True)
-        elif mode == 2:
-            # Relative mode
-            parameter = self._relative_base + argument
-        else:
-            raise InvalidAddressingModeException(mode, True)
+        # Relative mode
+        if mode == 2:
+            argument += self._relative_base
 
-        return parameter
+        # Automatically derefence input parameters _not_ in immediate mode
+        if not is_output_parameter and mode != 1:
+            argument = self._memory[argument]
+
+        return argument
 
     def _get_parameters(self, modes, offset, count, getfn):
         args_base = self._pc + 1 + offset
@@ -117,8 +105,8 @@ class Program():
         except KeyError:
             raise UnknownOpcodeException(opcode)
 
-        input_params = self._get_parameters(modes, 0, input_param_count, self._get_input_parameter)
-        output_params = self._get_parameters(modes[input_param_count:], input_param_count, output_param_count, self._get_output_parameter)
+        input_params = self._get_parameters(modes, 0, input_param_count, lambda m, a: self._get_parameter(m, a, False))
+        output_params = self._get_parameters(modes[input_param_count:], input_param_count, output_param_count, lambda m, a: self._get_parameter(m, a, True))
         self._pc += 1 + input_param_count + output_param_count
         opcodefn(self, input_params + output_params)
 
