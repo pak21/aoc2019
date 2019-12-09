@@ -11,7 +11,6 @@ class Program():
         7: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a < b else 0)),
         8: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a == b else 0)),
         9: (1, 0, lambda s, p: s._adjust_relative_base(p[0])),
-        99: (0, 0, lambda s, p: True)
     }
 
     def __init__(self, initial_memory, input_value = None, *, input_values = None, input_generator = None):
@@ -88,24 +87,19 @@ class Program():
     def _threearg_opcode(self, parameters, resultfn):
         result = resultfn(parameters[0], parameters[1])
         self._memory[parameters[2]] = result
-        return False
 
     def _input(self, parameter):
         self._memory[parameter] = next(self._input_iterator)
-        return False
 
     def _output(self, parameter):
         self._outputs.append(parameter)
-        return False
 
     def _jump(self, parameters, testfn):
         if testfn(parameters[0]):
             self._pc = parameters[1]
-        return False
 
     def _adjust_relative_base(self, parameter):
         self._relative_base += parameter
-        return False
 
     def single_step(self):
         value = self._memory[self._pc]
@@ -115,6 +109,9 @@ class Program():
         p3mode = (value // 10000) % 10
         modes = [p1mode, p2mode, p3mode]
 
+        if opcode == 99: # Terminate
+            return True
+
         try:
             input_param_count, output_param_count, opcodefn = self.OPCODES[opcode]
         except KeyError:
@@ -123,7 +120,9 @@ class Program():
         input_params = self._get_parameters(modes, 0, input_param_count, self._get_input_parameter)
         output_params = self._get_parameters(modes[input_param_count:], input_param_count, output_param_count, self._get_output_parameter)
         self._pc += 1 + input_param_count + output_param_count
-        return opcodefn(self, input_params + output_params)
+        opcodefn(self, input_params + output_params)
+
+        return False # Haven't terminated
 
     def run(self):
         terminated = False
