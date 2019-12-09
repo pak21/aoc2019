@@ -1,3 +1,5 @@
+import collections
+
 class Program():
     OPCODES = {
         1: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: a + b)),
@@ -16,7 +18,11 @@ class Program():
         self._pc = 0
         self._relative_base = 0
         self._outputs = []
-        self._memory = initial_memory.copy()
+        self._memory = collections.defaultdict(int)
+
+        for k, v in enumerate(initial_memory):
+            self._memory[k] = v
+
         if input_generator is not None:
             self._input_iterator = input_generator()
         elif input_values is not None:
@@ -34,7 +40,11 @@ class Program():
 
     @property
     def memory(self):
-        return self._memory
+        max_index = max(self._memory.keys())
+        memory = [0] * (max_index + 1)
+        for k, v in self._memory.items():
+            memory[k] = v
+        return memory
 
     @property
     def outputs(self):
@@ -72,12 +82,12 @@ class Program():
 
 
     def _get_parameters(self, modes, count):
-        args = self._memory[self._pc + 1:self._pc + 1 + count]
+        args = [self._memory[i] for i in range(self._pc + 1, self._pc + 1 + count)]
         parameters = [self._get_parameter(modes[i], args[i]) for i in range(count)]
         return parameters
 
     def _get_output_parameters(self, modes, input_count, output_count):
-        args = self._memory[self._pc + 1 + input_count:self._pc + 1 + input_count + output_count]
+        args = [self._memory[i] for i in range(self._pc + 1 + input_count, self._pc + 1 + input_count + output_count)]
         parameters = [self._get_output_parameter(modes[input_count + i], args[i]) for i in range(output_count)]
         return parameters
 

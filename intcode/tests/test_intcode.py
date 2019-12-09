@@ -301,6 +301,16 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(program.memory[8], expected)
 
+    def test_infinite_memory(self):
+        # Arrange
+        program = intcode.Program([4, 998, 1101, 2, 3, 999, 4, 999, 99])
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [0, 5])
+
 class Test_Program_Day2(unittest.TestCase):
     """Integration tests from Advent of Code Day 2"""
 
@@ -407,3 +417,17 @@ class Test_Program_Day5(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.outputs, [expected])
+
+class Test_Program_Day9(unittest.TestCase):
+    """Integration tests for Advent of Code Day 9."""
+
+    def test_quine(self):
+        # Arrange
+        initial_memory = [109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99]
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, initial_memory)
