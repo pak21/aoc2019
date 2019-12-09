@@ -5,7 +5,7 @@ class Program():
         1: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: a + b)),
         2: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: a * b)),
         3: (0, 1, lambda s, p: s._input(p[0])),
-        4: (1, 0, lambda s, p: s._output(p)),
+        4: (1, 0, lambda s, p: s._output(p[0])),
         5: (2, 0, lambda s, p: s._jump(p, lambda a: a != 0)),
         6: (2, 0, lambda s, p: s._jump(p, lambda a: a == 0)),
         7: (2, 1, lambda s, p: s._threearg_opcode(p, lambda a, b: 1 if a < b else 0)),
@@ -50,7 +50,7 @@ class Program():
     def outputs(self):
         return self._outputs
 
-    def _get_parameter(self, mode, argument):
+    def _get_input_parameter(self, mode, argument):
         if mode == 0:
             # Position mode
             parameter = self._memory[argument]
@@ -80,15 +80,10 @@ class Program():
 
         return parameter
 
-    def _get_parameters(self, modes, count):
-        args = [self._memory[i] for i in range(self._pc + 1, self._pc + 1 + count)]
-        parameters = [self._get_parameter(modes[i], args[i]) for i in range(count)]
-        return parameters
-
-    def _get_output_parameters(self, modes, input_count, output_count):
-        args = [self._memory[i] for i in range(self._pc + 1 + input_count, self._pc + 1 + input_count + output_count)]
-        parameters = [self._get_output_parameter(modes[input_count + i], args[i]) for i in range(output_count)]
-        return parameters
+    def _get_parameters(self, modes, offset, count, getfn):
+        args_base = self._pc + 1 + offset
+        args = [self._memory[i] for i in range(args_base, args_base + count)]
+        return [getfn(*pair) for pair in zip(modes, args)]
 
     def _threearg_opcode(self, parameters, resultfn):
         result = resultfn(parameters[0], parameters[1])
@@ -99,8 +94,8 @@ class Program():
         self._memory[parameter] = next(self._input_iterator)
         return False
 
-    def _output(self, parameters):
-        self._outputs.append(parameters[0])
+    def _output(self, parameter):
+        self._outputs.append(parameter)
         return False
 
     def _jump(self, parameters, testfn):
@@ -125,12 +120,10 @@ class Program():
         except KeyError:
             raise UnknownOpcodeException(opcode)
 
-        param_count = input_param_count + output_param_count
-        input_params = self._get_parameters(modes, input_param_count)
-        output_params = self._get_output_parameters(modes, input_param_count, output_param_count)
-        params = input_params + output_params
-        self._pc += 1 + param_count
-        return opcodefn(self, params)
+        input_params = self._get_parameters(modes, 0, input_param_count, self._get_input_parameter)
+        output_params = self._get_parameters(modes[input_param_count:], input_param_count, output_param_count, self._get_output_parameter)
+        self._pc += 1 + input_param_count + output_param_count
+        return opcodefn(self, input_params + output_params)
 
     def run(self):
         terminated = False
