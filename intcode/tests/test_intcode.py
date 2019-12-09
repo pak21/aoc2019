@@ -431,3 +431,17 @@ class Test_Program_Day9(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.outputs, initial_memory)
+
+    @parameterized.expand([
+        ([1102, 34915192, 34915192, 7, 4, 7, 99, 0], 1219070632396864),
+        ([104, 1125899906842624, 99], 1125899906842624),
+    ])
+    def test_big_numbers(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs[0], expected)
