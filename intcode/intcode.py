@@ -61,7 +61,7 @@ class Program():
             # Relative mode
             parameter = self._memory[self._relative_base + argument]
         else:
-            raise ValueError('Unknown addressing mode {}'.format(mode))
+            raise InvalidAddressingModeException(mode, False)
 
         return parameter
 
@@ -71,15 +71,14 @@ class Program():
             parameter = argument
         elif mode == 1:
             # Output parameters cannot be in immediate mode
-            raise ValueError('Output parameter in immediate mode')
+            raise InvalidAddressingModeException(mode, True)
         elif mode == 2:
             # Relative mode
             parameter = self._relative_base + argument
         else:
-            raise ValueError('Unknown addressing mode {}'.format(mode))
+            raise InvalidAddressingModeException(mode, True)
 
         return parameter
-
 
     def _get_parameters(self, modes, count):
         args = [self._memory[i] for i in range(self._pc + 1, self._pc + 1 + count)]
@@ -151,3 +150,16 @@ class UnknownOpcodeException(Exception):
     @property
     def opcode(self):
         return self._opcode
+
+class InvalidAddressingModeException(Exception):
+    def __init__(self, addressing_mode, output_mode):
+        self._addressing_mode = addressing_mode
+        self._output_mode = output_mode
+
+    @property
+    def addressing_mode(self):
+        return self._addressing_mode
+
+    @property
+    def output_mode(self):
+        return self._output_mode

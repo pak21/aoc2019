@@ -258,6 +258,22 @@ class Test_Program(unittest.TestCase):
         with self.assertRaises(intcode.UnknownOpcodeException):
             program.single_step()
 
+    def test_unknown_addressing_mode_throws_correct_exception(self):
+        # Arrange
+        program = intcode.Program([304, 1])
+
+        # Act / Assert
+        with self.assertRaises(intcode.InvalidAddressingModeException):
+            program.single_step()
+
+    def test_immediate_mode_output_parameter_throws_correct_exception(self):
+        # Arrange
+        program = intcode.Program([11101, 1, 2, 3])
+
+        # Act / Assert
+        with self.assertRaises(intcode.InvalidAddressingModeException):
+            program.single_step()
+
     @parameterized.expand([
         ([1, 0, 0, 3, 99], [1, 0, 0, 2, 99]),
         ([1, 0, 0, 3, 1, 1, 1, 3, 99], [1, 0, 0, 0, 1, 1, 1, 3, 99]),
