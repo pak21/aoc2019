@@ -21,6 +21,16 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(pc, 0)
 
+    def test_relative_base_is_initially_zero(self):
+        # Arrange
+        program = intcode.Program([])
+
+        # Act
+        relative_base = program.relative_base
+
+        # Assert
+        self.assertEqual(relative_base, 0)
+
     def test_memory_is_copied(self):
         # Arrange
         initial_value = 42
@@ -138,6 +148,18 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.outputs, [expected_output])
         self.assertFalse(terminated)
 
+    def test_output_with_relative_base(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([109, 5, 204, -1, expected, 0])
+        program.single_step() # Set relative base
+
+        # Act
+        program.single_step()
+
+        # Assert
+        self.assertEqual(program.outputs, [expected])
+
     @parameterized.expand([
         ([5, 0, 4, 0, 42], 42),
         ([105, 0, 4, 0, 42], 3),
@@ -206,6 +228,18 @@ class Test_Program(unittest.TestCase):
         self.assertEqual(program.memory[4], expected)
         self.assertFalse(terminated)
 
+    def test_single_adjust_relative_base_instruction(self):
+        # Arrange
+        expected = 42
+        program = intcode.Program([109, expected])
+
+        # Act
+        terminated = program.single_step()
+
+        # Assert
+        self.assertEqual(program.relative_base, expected)
+        self.assertFalse(terminated)
+
     def test_terminate_instruction(self):
         # Arrange
         program = intcode.Program([99])
@@ -222,6 +256,22 @@ class Test_Program(unittest.TestCase):
 
         # Act / Assert
         with self.assertRaises(intcode.UnknownOpcodeException):
+            program.single_step()
+
+    def test_unknown_addressing_mode_throws_correct_exception(self):
+        # Arrange
+        program = intcode.Program([304, 1])
+
+        # Act / Assert
+        with self.assertRaises(intcode.InvalidAddressingModeException):
+            program.single_step()
+
+    def test_immediate_mode_output_parameter_throws_correct_exception(self):
+        # Arrange
+        program = intcode.Program([11101, 1, 2, 3])
+
+        # Act / Assert
+        with self.assertRaises(intcode.InvalidAddressingModeException):
             program.single_step()
 
     @parameterized.expand([
@@ -251,6 +301,31 @@ class Test_Program(unittest.TestCase):
         # Assert
         self.assertEqual(program.outputs, [46])
         self.assertEqual(program.pc, 6)
+
+    @parameterized.expand([
+        ([109, 9, 1201, -2, 10, 8, 99, 5, 999], 15),
+        ([109, 11, 2102, 5, -4, 8, 99, 7, 999], 35),
+        ([109, 4, 21102, 11, 13, 4, 99, 999, 999], 143),
+    ])
+    def test_relative_addressing_mode(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.memory[8], expected)
+
+    def test_infinite_memory(self):
+        # Arrange
+        program = intcode.Program([4, 998, 1101, 2, 3, 999, 4, 999, 99])
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, [0, 5])
 
 class Test_Program_Day2(unittest.TestCase):
     """Integration tests from Advent of Code Day 2"""
@@ -358,3 +433,31 @@ class Test_Program_Day5(unittest.TestCase):
 
         # Assert
         self.assertEqual(program.outputs, [expected])
+
+class Test_Program_Day9(unittest.TestCase):
+    """Integration tests for Advent of Code Day 9."""
+
+    def test_quine(self):
+        # Arrange
+        initial_memory = [109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99]
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs, initial_memory)
+
+    @parameterized.expand([
+        ([1102, 34915192, 34915192, 7, 4, 7, 99, 0], 1219070632396864),
+        ([104, 1125899906842624, 99], 1125899906842624),
+    ])
+    def test_big_numbers(self, initial_memory, expected):
+        # Arrange
+        program = intcode.Program(initial_memory)
+
+        # Act
+        program.run()
+
+        # Assert
+        self.assertEqual(program.outputs[0], expected)
