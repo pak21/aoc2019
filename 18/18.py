@@ -8,94 +8,76 @@ import numpy as np
 
 MOVES = [(0, 1), (-1, 0), (0, -1), (1, 0)]
 
-def parse_trace(trace):
-    doors = set([d for d in re.sub(r'[^A-Z]', '', trace)])
-    return (len(trace), doors)
-
 def find_shortest_path(grid, start, end):
     seen = set(start)
-    states = [(start, '')]
+    states = [(start, 0, set())]
     while True:
-        pos, trace = states.pop(0)
+        pos, distance, doors = states.pop(0)
         for move in MOVES:
             next_pos = (pos[0] + move[0], pos[1] + move[1])
             if next_pos in seen:
                 continue
-            if grid[next_pos] == '#':
+            next_char = grid[next_pos]
+            if next_char == '#':
                 continue
-            seen.add(next_pos)
-            next_trace = trace + grid[next_pos]
+            elif next_char.isupper():
+                doors = doors | {next_char.lower()}
+
             if next_pos == end:
-                return parse_trace(next_trace)
-            states.append((next_pos, next_trace))
+                return (distance + 1, doors)
+
+            states.append((next_pos, distance + 1, doors))
+            seen.add(next_pos)
 
 with open(sys.argv[1]) as f:
     grid = np.array([[c for c in line.strip()] for line in f])
 
-print('Read grid')
+print('Read grid {}'.format(grid.shape))
 
-locations = {c: index for index, c in np.ndenumerate(grid) if c != '#' and c != '.'}
+locations = {c: index for index, c in np.ndenumerate(grid) if c != '#' and c != '.' and not c.isupper()}
 
-print('Found locations')
+print('Found locations ({})'.format(len(locations)))
 
-traces = {}
-for obj1, pos1 in locations.items():
-    for obj2, pos2 in locations.items():
-        if obj1 >= obj2:
-            continue
-        if obj1.isupper() or obj2.isupper():
-            continue
-        if (obj1, obj2) in traces:
-            continue
-        path = find_shortest_path(grid, pos1, pos2)
-        traces[(obj1, obj2)] = path
+distances = {(obj1, obj2): find_shortest_path(grid, pos1, pos2) for obj1, pos1 in locations.items() for obj2, pos2 in locations.items() if obj1 < obj2}
+distances = {**distances, **{(obj2, obj1): v for (obj1, obj2), v in distances.items()}}
 
-print('Found all traces')
+print('Found all distances ({})'.format(len(distances)))
 
-to_collect = set([key for key in locations.keys() if key.islower()])
+to_collect = frozenset([key for key in locations.keys() if key != '@'])
 min_distance = None
 
-def make_key(state):
-    return state[1] + ''.join(sorted(list(state[2])))
+start_node = ('@', to_collect)
+initial_state = (0, start_node)
+min_seen = {start_node: 0}
 
-initial_state = (0, '@', set(), to_collect)
 states = [initial_state]
-min_seen = {make_key(initial_state): 0}
-
-heapq.heapify(states)
-
 while states:
     old_state = heapq.heappop(states)
-    old_key = make_key(old_state)
-    total_distance, current_pos, collected, needed = old_state
+    total_distance, node = old_state
 
     if min_distance and total_distance >= min_distance:
         break
 
-    if old_key in min_seen and total_distance > min_seen[old_key]:
+    if node in min_seen and total_distance > min_seen[node]:
         continue
 
-#    print('At {}, collected {}, needed {}, total distance {}'.format(current_pos, collected, needed, total_distance))
-    for next_key in needed:
+    current_pos, needed = node
+    collected = to_collect - needed
 
-        trace_key = (current_pos, next_key) if current_pos < next_key else (next_key, current_pos)
-        distance, doors = traces[trace_key]
-        blocked = doors - collected
-        if not blocked:
-#            print('  Could move from {} to {} through {} -> {}'.format(current_pos, next_key, doors, blocked))
-            new_collected = collected | set(next_key.upper())
-            new_needed = needed - set(next_key)
+    for next_key in needed:
+        distance, doors = distances[(current_pos, next_key)]
+
+        if doors <= collected:
+            new_needed = needed - {next_key}
             new_distance = total_distance + distance
-            new_state = (new_distance, next_key, new_collected, new_needed)
 
             if new_needed:
-                new_key = make_key(new_state)
-                if new_key not in min_seen or new_distance < min_seen[new_key]:
-                    min_seen[new_key] = new_distance
-                    heapq.heappush(states, new_state)
-            else:
-                if not min_distance or new_distance < min_distance:
-                    print('Solved in {} steps'.format(new_distance))
-                    min_distance = new_distance
+                next_node = (next_key, new_needed)
+                if next_node not in min_seen or new_distance < min_seen[next_node]:
+                    heapq.heappush(states, (new_distance, next_node))
+                    min_seen[next_node] = new_distance
+            elif not min_distance or new_distance < min_distance:
+                print('Solved in {} steps'.format(new_distance))
+                min_distance = new_distance
 
 print('Min distance', min_distance)
