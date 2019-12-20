@@ -67,7 +67,6 @@ while states:
         level_change = -1 if is_outer_portal(pos, grid) else 1
         new_level = level + level_change
         if (new_pos, new_level) not in seen:
-            print('Jumping from {} after {} steps, state queue is {}, seen is {}'.format((pos, level), distance, len(states), len(seen)))
             seen = seen | {(new_pos, new_level)}
             if new_level < 30:
                 states.append((new_pos, new_level, distance + 1))
@@ -82,6 +81,7 @@ while states:
 
             if level == 0 and new_pos == end_location:
                 print('Reached {} in {} steps'.format(end_location, distance + 1))
+                print('States seen: {}'.format(len(seen)))
                 sys.exit(1)
 
             if grid[new_pos] == '.':

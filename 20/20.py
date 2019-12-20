@@ -64,6 +64,7 @@ while states:
 
         if new_pos == end_location:
             print('Reached {} in {} steps'.format(end_location, distance + 1))
+            print('Saw {} states'.format(len(seen)))
             sys.exit(1)
 
         if new_pos in portals:
